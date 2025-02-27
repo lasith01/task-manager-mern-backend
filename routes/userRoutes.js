@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const auth = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -34,5 +35,18 @@ router.post('/login', async(req, res) =>{
         res.status(401).json({message: "Invalid Credentials"});
     }
 });
+
+router.get('/me', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId); 
+        if (!user) {
+            return res.status(404).json({message: 'User not found'});
+        }
+        res.json({ _id: user.id, name: user.name, email: user.email });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 
 module.exports = router;
